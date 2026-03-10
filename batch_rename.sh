@@ -1,46 +1,70 @@
-#!/bin/bash                                                                                                                
+#!/bin/bash
 
-# Usage: ./batch_rename.sh -option [directory/] [pattern] [replacement]                                                    
+set -euo pipefail
 
-if [ $# -eq 4 ]; then
-    #optional dry                                                                                                          
-    if [ "$1" = "-d" ]||[ "$1" = "--dry-run" ]; then
-        dir=$2
-        pat=$3
-        rep=$4
-        op=1
-    else
-        echo "unknown option" >&2
-        exit 1
-        fi
-elif [ $# -eq 3 ]; then
-    dir=$1
-    pat=$2
-    rep=$3
-    op=0
-else
-    echo "ERROR: Usage: ./batch_rename.sh -option [directory] [pattern] [replacement]" >&2
+d=0
+g=0
+
+usage() {
+    cat << USAGE
+Usage: ./batch_rename.sh [options] <directory> <pattern> <replacement>
+
+Options:
+    -h, --help           Show this help message
+    -d, --dry-run	 Print changes to screen without renaming files
+    -g, --global	 Apply change to all inctences of pattern
+
+Example:
+    $0 -d -g  results/ old new
+Note: -dg not supported, rewrite as -d -g
+USAGE
+}
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -h|--help)
+            usage
+            exit 0
+            ;;
+        -d|--dry-run)
+            d=1
+            shift
+            ;;
+        -g|--global)
+            g=1
+            shift
+            ;;
+        -*)
+            echo "ERROR: Unknown option: $1" >&2
+            exit 1
+            ;;
+        *)
+            dir="$1"
+            pat="$2"
+            rep="$3"
+            shift 3
+            ;;
+    esac
+done
+
+
+if [ ! -d $dir ]; then
+    echo "ERROR: Directory not found" >&2
     exit 1
 fi
 
-if [ -d $dir ]; then
-    for file in "$dir"*; do
-        if [ -f $file ]; then
-            new=$(echo "$file" | sed "s/$pat/$rep/")
-            if [ $op = 0 ]; then
-                mv $file $new
-                echo "$file -> $new"
-            elif [ $op = 1 ]; then
-                echo "[DRY RUN] $file -> $new"
-            fi
-        else
-	    echo "file does not exist"
-	fi
-    done
-elif [ ! -d $dir ]; then
-    echo "directory not found" >&2
-    exit 1
-else
-    echo"ERROR: Usage: ./batch_rename.sh -option [directory] [pattern] [replacement]" >&2
-    exit 1
-fi
+files=$(ls "$dir" | grep "$pat")
+for file in $files; do
+    if [ $g = 0 ]; then
+	new=$(echo "$file" | sed "s/$pat/$rep/")
+    elif [ $g = 1 ]; then
+	new=$(echo "$file" | sed "s/$pat/$rep/g")
+    fi
+    if [ $d = 0 ]; then
+	mv "$dir""$file" "$dir""$new"
+	echo "$file -> $new"
+    elif [ $d = 1 ]; then
+	echo "[DRY RUN] $file -> $new"
+    fi
+done
+
