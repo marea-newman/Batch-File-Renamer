@@ -12,12 +12,16 @@ Usage: ./batch_rename.sh [options] <directory> <pattern> <replacement>
 
 Options:
     -h, --help           Show this help message
-    -d, --dry-run	 Print changes to screen without renaming files
+    -d, --dry-run	 Preview changes without renaming files
     -g, --global	 Apply change to all inctences of pattern
 
 Example:
     $0 -d -g  results/ old new
 Note: -dg not supported, rewrite as -d -g
+Note: If no replacement is given, matching pattern is deleted
+Example:
+$0 results/ _0
+file_0.txt -> file.txt
 USAGE
 }
 
