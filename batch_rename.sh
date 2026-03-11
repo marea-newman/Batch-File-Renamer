@@ -4,6 +4,7 @@ set -euo pipefail
 
 d=0
 g=0
+rep=""
 
 usage() {
     cat << USAGE
@@ -39,10 +40,20 @@ while [[ $# -gt 0 ]]; do
             exit 1
             ;;
         *)
-            dir="$1"
-            pat="$2"
-            rep="$3"
-            shift 3
+	    if [ $# -eq 3 ]; then
+               dir="$1"
+               pat="$2"
+               rep="$3"
+               shift 3
+	    elif [ $# -eq 2 ]; then
+		dir="$1"
+		pat="$2"
+		rep=""
+		shift 2
+	    else
+		echo "ERROR: Missing pattern" >&2
+		exit 1
+	    fi
             ;;
     esac
 done
